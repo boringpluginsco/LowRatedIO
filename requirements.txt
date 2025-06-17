@@ -7,4 +7,5 @@ outscraper==5.9.1
 requests==2.31.0
 apify-client
 openai==1.35.0
-serpapi==0.1.5 
+serpapi==0.1.5
+python-multipart==0.0.6 
