@@ -40,10 +40,10 @@ LowRated is an AI-powered web application that helps you discover and analyze bu
 
 5. Run the application:
    ```bash
-   uvicorn app.main:app --reload
+   uvicorn app.main:app --reload --port 8080
    ```
 
-Visit `http://localhost:8000` to access the application.
+Visit `http://localhost:8080` to access the application.
 
 ## Docker Deployment
 

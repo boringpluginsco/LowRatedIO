@@ -8,7 +8,7 @@
     "dockerfile": "./Dockerfile"
   },
   "deploy": {
-    "port": 8000,
+    "port": 8080,
     "healthcheck": "/health"
   },
   "environment": {

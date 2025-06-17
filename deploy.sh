@@ -67,7 +67,7 @@ echo "7. Deploy!"
 echo ""
 
 echo "🔗 Application will be available at:"
-echo "   Local: http://localhost:8000"
+    echo "   Local: http://localhost:8080"
 echo "   Coolify: https://your-domain.com"
 echo ""
 
