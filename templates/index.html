@@ -1,15 +1,330 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RepScout</title>
+    <title>LowRated - Find Low-Rated Businesses for Reputation Management</title>
     <link href="/static/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Force the gradient background with high specificity */
+        html, body {
+            background: radial-gradient(ellipse at top left, #1e3a8a 0%, #111827 60%) !important;
+            background-attachment: fixed !important;
+            background-size: cover !important;
+            background-repeat: no-repeat !important;
+            min-height: 100vh !important;
+        }
+        
+        /* Ensure no other background overrides */
+        body * {
+            background-color: transparent !important;
+        }
+        
+        /* Override only specific elements that need backgrounds */
+        .form-bg {
+            background-color: #181c24 !important;
+        }
+        
+        .input-bg {
+            background-color: #23283a !important;
+        }
+        
+        .btn-bg {
+            background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+        }
+        
+        .btn-bg:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+        }
+        
+        .glow {
+            background: linear-gradient(to bottom right, #2563eb, #3b82f6, transparent) !important;
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            height: 400px;
+            opacity: 0.4;
+            border-radius: 50%;
+            filter: blur(60px);
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* Loading Screen Styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(24, 28, 36, 0.95) !important;
+            backdrop-filter: blur(20px) !important;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .loading-content {
+            text-align: center;
+            max-width: 500px;
+            padding: 40px;
+            background: rgba(31, 41, 55, 0.9) !important;
+            border-radius: 24px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Circular Loading Animation */
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(59, 130, 246, 0.2);
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+        
+        /* Stage indicator dots */
+        .stage-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .stage-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .stage-dot.active {
+            background: #3b82f6;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+        }
+        
+        .stage-dot.completed {
+            background: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+        }
+        
+        /* Fade animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 flex flex-col items-center justify-center h-screen">
-    <form action="/search" method="post" class="bg-white p-6 rounded shadow-md w-full max-w-md">
-        <h2 class="text-2xl font-bold mb-4">Find Badly Reviewed Businesses</h2>
-        <input type="text" name="category" placeholder="e.g. Dentist" class="border w-full mb-3 p-2" required />
-        <input type="text" name="location" placeholder="e.g. Dubai" class="border w-full mb-3 p-2" required />
-        <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded">Search</button>
-    </form>
+<body class="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+    <!-- Blue Glow Effect -->
+    <div class="glow"></div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content fade-in">
+            <div class="loading-spinner"></div>
+            <h2 id="loadingTitle" class="text-2xl font-bold text-white mb-3">Initializing Search</h2>
+            <p id="loadingDescription" class="text-gray-300 mb-6">Preparing to analyze businesses in your area...</p>
+            
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+            
+            <!-- Stage Indicators -->
+            <div class="stage-indicators">
+                <div class="stage-dot active" id="dot-0"></div>
+                <div class="stage-dot" id="dot-1"></div>
+                <div class="stage-dot" id="dot-2"></div>
+                <div class="stage-dot" id="dot-3"></div>
+                <div class="stage-dot" id="dot-4"></div>
+            </div>
+            
+            <p class="text-sm text-gray-400 mt-4">This may take a few moments...</p>
+        </div>
+    </div>
+    
+    <div class="content w-full max-w-lg flex flex-col items-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-4 text-center drop-shadow-lg">
+            Discover & Analyze<br>with <span class="text-blue-400">LowRated</span>
+        </h1>
+        <p class="text-lg text-gray-300 mb-8 text-center">Find low-rated businesses for reputation management opportunities.</p>
+        
+        <form id="searchForm" action="/search" method="post" class="form-bg p-8 rounded-2xl shadow-2xl w-full flex flex-col gap-6 border border-gray-800">
+            <div>
+                <label class="block text-gray-400 mb-2 font-medium">Select API:</label>
+                <div class="flex gap-4">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="api_choice" value="outscraper" checked class="form-radio text-blue-500 focus:ring-blue-400">
+                        <span class="ml-2 text-gray-200">Outscraper API</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="api_choice" value="google_places" class="form-radio text-blue-500 focus:ring-blue-400">
+                        <span class="ml-2 text-gray-200">Google Places API</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="api_choice" value="apify" class="form-radio text-blue-500 focus:ring-blue-400">
+                        <span class="ml-2 text-gray-200">Apify API</span>
+                    </label>
+                </div>
+            </div>
+            <input type="text" name="category" placeholder="e.g. Dentist" class="input-bg border border-gray-700 rounded-lg w-full mb-3 p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-white" required />
+            <input type="text" name="location" placeholder="e.g. Dubai" class="input-bg border border-gray-700 rounded-lg w-full mb-3 p-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-white" required />
+            <button type="submit" id="searchButton" class="btn-bg text-white font-bold px-6 py-3 rounded-xl shadow-lg transition-all duration-200">
+                <span id="buttonText">Search</span>
+                <span id="buttonSpinner" class="hidden">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Searching...
+                </span>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const loadingStages = [
+            {
+                title: "Initializing Search",
+                description: "Preparing to analyze businesses in your area...",
+                duration: 1500
+            },
+            {
+                title: "Retrieving Locations",
+                description: "Fetching business data from Google Places API...",
+                duration: 3000
+            },
+            {
+                title: "Gathering Reviews",
+                description: "Collecting customer reviews and ratings...",
+                duration: 2500
+            },
+            {
+                title: "Sorting & Filtering",
+                description: "Organizing reviews by rating and relevance...",
+                duration: 2000
+            },
+            {
+                title: "Analyzing Data",
+                description: "Processing review sentiment and patterns...",
+                duration: 2000
+            }
+        ];
+
+        let currentStage = 0;
+        let stageTimeout;
+
+        function showLoadingStage(stageIndex) {
+            if (stageIndex >= loadingStages.length) {
+                // All stages complete, submit the form
+                document.getElementById('searchForm').submit();
+                return;
+            }
+
+            const stage = loadingStages[stageIndex];
+            const titleEl = document.getElementById('loadingTitle');
+            const descEl = document.getElementById('loadingDescription');
+            const progressBar = document.getElementById('progressBar');
+
+            // Update content with fade effect
+            titleEl.style.opacity = '0';
+            descEl.style.opacity = '0';
+
+            setTimeout(() => {
+                titleEl.textContent = stage.title;
+                descEl.textContent = stage.description;
+                titleEl.style.opacity = '1';
+                descEl.style.opacity = '1';
+            }, 200);
+
+            // Update progress bar
+            const progress = ((stageIndex + 1) / loadingStages.length) * 100;
+            progressBar.style.width = progress + '%';
+
+            // Update stage indicators
+            const currentDot = document.getElementById(`dot-${stageIndex}`);
+            if (currentDot) {
+                // Mark previous dots as completed
+                for (let i = 0; i < stageIndex; i++) {
+                    const prevDot = document.getElementById(`dot-${i}`);
+                    if (prevDot) {
+                        prevDot.classList.remove('active');
+                        prevDot.classList.add('completed');
+                    }
+                }
+                
+                // Mark current dot as active
+                currentDot.classList.add('active');
+            }
+
+            // Move to next stage after duration
+            stageTimeout = setTimeout(() => {
+                currentStage++;
+                showLoadingStage(currentStage);
+            }, stage.duration);
+        }
+
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent immediate form submission
+            
+            // Show loading overlay
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'flex';
+            
+            // Update button state
+            const button = document.getElementById('searchButton');
+            const buttonText = document.getElementById('buttonText');
+            const buttonSpinner = document.getElementById('buttonSpinner');
+            
+            button.disabled = true;
+            buttonText.classList.add('hidden');
+            buttonSpinner.classList.remove('hidden');
+            
+            // Start loading sequence
+            currentStage = 0;
+            showLoadingStage(currentStage);
+        });
+
+        // Add smooth transitions to text elements
+        document.getElementById('loadingTitle').style.transition = 'opacity 0.3s ease';
+        document.getElementById('loadingDescription').style.transition = 'opacity 0.3s ease';
+    </script>
 </body>
 </html> 

@@ -1,0 +1,29 @@
+{
+  "name": "LowRated",
+  "description": "AI-powered reputation analysis for finding low-rated businesses",
+  "repository": "https://github.com/your-username/LowRatedIO",
+  "branch": "main",
+  "build": {
+    "type": "dockerfile",
+    "dockerfile": "./Dockerfile"
+  },
+  "deploy": {
+    "port": 8000,
+    "healthcheck": "/health"
+  },
+  "environment": {
+    "required": [
+      "OUTSCRAPER_API_KEY",
+      "SERPAPI_KEY", 
+      "OPENAI_API_KEY"
+    ],
+    "optional": [
+      "GOOGLE_API_KEY",
+      "APIFY_TOKEN"
+    ]
+  },
+  "resources": {
+    "memory": "1024MB",
+    "cpu": "0.5"
+  }
+} 

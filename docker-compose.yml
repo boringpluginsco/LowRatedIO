@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  lowrated:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - OUTSCRAPER_API_KEY=${OUTSCRAPER_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - APIFY_TOKEN=${APIFY_TOKEN}
+      - SERPAPI_KEY=${SERPAPI_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=10)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s 

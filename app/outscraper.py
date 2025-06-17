@@ -22,10 +22,12 @@ async def get_negative_reviews(query: str, limit: int = 5):
         # Use the reviews-v3 endpoint with proper parameters
         results = client.google_maps_reviews(
             query,
-            reviews_limit=3,  # Get 3 reviews per business
+            reviews_limit=5,  # Get 5 reviews per business
             limit=limit,      # Number of businesses to return
             sort="lowest_rating",  # Sort by lowest rating
-            language="en"
+            cutoff_rating=2,  # Only include businesses with rating below 4
+            language="en",
+            #reviews_query="the"
         )
         
         logger.info(f"Received results from API")
@@ -44,6 +46,7 @@ async def get_negative_reviews(query: str, limit: int = 5):
                 "address": place.get("full_address"),
                 "rating": place.get("rating"),
                 "reviews_count": place.get("reviews"),
+                "website": place.get("site") or place.get("website") or place.get("domain"),
                 "reviews": []
             }
             
@@ -64,4 +67,33 @@ async def get_negative_reviews(query: str, limit: int = 5):
         
     except Exception as e:
         logger.error(f"Error occurred: {str(e)}")
+        return [] 
+
+async def get_trustpilot_reviews(domain: str, limit: int = 10):
+    """
+    Fetch reviews from Trustpilot for a given domain using Outscraper API.
+    """
+    try:
+        logger.info(f"Fetching Trustpilot reviews for domain: {domain}")
+        results = client.trustpilot_reviews(
+            [domain],
+            limit=limit,
+            sort="recency",
+            language="en",
+            async_req=False
+        )
+        logger.info(f"Trustpilot API response: {results}")
+        reviews = []
+        if results and isinstance(results, list) and len(results) > 0:
+            items = results[0].get("reviews_data", [])
+            for review in items:
+                reviews.append({
+                    "author": review.get("author"),
+                    "rating": review.get("rating"),
+                    "text": review.get("text"),
+                    "date": review.get("date")
+                })
+        return reviews
+    except Exception as e:
+        logger.error(f"Trustpilot error: {str(e)}")
         return [] 

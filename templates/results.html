@@ -1,44 +1,806 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Results | RepScout</title>
+    <title>Search Results | LowRated</title>
     <link href="/static/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Force the gradient background with high specificity */
+        html, body {
+            background: radial-gradient(ellipse at top left, #1e3a8a 0%, #111827 60%) !important;
+            background-attachment: fixed !important;
+            background-size: cover !important;
+            background-repeat: no-repeat !important;
+            min-height: 100vh !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        /* Ensure no other background overrides except specific elements */
+        body * {
+            background-color: transparent !important;
+        }
+        
+        /* Override only specific elements that need backgrounds */
+        .panel-bg {
+            background: rgba(24, 28, 36, 0.8) !important;
+            backdrop-filter: blur(20px) !important;
+        }
+        
+        .panel-header {
+            background: rgba(0, 0, 0, 0.2) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+        
+        .overlay-bg {
+            background: rgba(0, 0, 0, 0.4) !important;
+            backdrop-filter: blur(16px) !important;
+        }
+        
+        .result-box-red {
+            background: rgba(239, 68, 68, 0.15) !important;
+            border-color: #ef4444 !important;
+            border-width: 2px !important;
+            box-shadow: 0 8px 32px rgba(239, 68, 68, 0.2) !important;
+        }
+        
+        .result-box-orange {
+            background: rgba(251, 146, 60, 0.15) !important;
+            border-color: #fb923c !important;
+            border-width: 2px !important;
+            box-shadow: 0 8px 32px rgba(251, 146, 60, 0.2) !important;
+        }
+        
+        .result-box-green {
+            background: rgba(34, 197, 94, 0.15) !important;
+            border-color: #22c55e !important;
+            border-width: 2px !important;
+            box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2) !important;
+        }
+        
+        .content-bg {
+            background: rgba(31, 41, 55, 0.9) !important;
+            backdrop-filter: blur(10px) !important;
+        }
+        
+        .input-bg {
+            background-color: #1a1a1a !important;
+        }
+        
+        .btn-bg {
+            background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .btn-bg:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        .info-icon {
+            background: rgba(59, 130, 246, 0.1) !important;
+            border: 1px solid rgba(59, 130, 246, 0.3) !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .info-icon:hover {
+            background: rgba(59, 130, 246, 0.2) !important;
+            border-color: #3b82f6 !important;
+            transform: scale(1.1) !important;
+        }
+        
+        .business-card {
+            transition: all 0.3s ease !important;
+            backdrop-filter: blur(10px) !important;
+        }
+        
+        .business-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        .rating-badge {
+            background: rgba(0, 0, 0, 0.4) !important;
+            backdrop-filter: blur(8px) !important;
+            border-radius: 12px !important;
+            padding: 8px 16px !important;
+        }
+        
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .show-reviews-btn {
+            background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+            border: none !important;
+            color: white !important;
+            font-weight: 600 !important;
+            padding: 12px 24px !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3) !important;
+            transition: all 0.3s ease !important;
+            font-size: 14px !important;
+        }
+        
+        .show-reviews-btn:hover {
+            background: linear-gradient(135deg, #b91c1c, #991b1b) !important;
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        /* Loading animations for AI panel */
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(59, 130, 246, 0.2);
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            border-radius: 3px;
+            transition: width 0.8s ease;
+        }
+        
+        /* Stage indicator dots */
+        .stage-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .stage-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .stage-dot.active {
+            background: #3b82f6;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+        }
+        
+        .stage-dot.completed {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        }
+        
+        /* Fade animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .glow {
+            background: linear-gradient(to bottom right, #2563eb, #3b82f6, transparent) !important;
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            height: 400px;
+            opacity: 0.4;
+            border-radius: 50%;
+            filter: blur(60px);
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .main-content {
+            position: relative;
+            z-index: 30;
+        }
+        
+        input[type="text"], input[type="search"] {
+            color: #e5e7eb !important;
+            border: 1px solid #333333 !important;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        input[type="text"]::placeholder, input[type="search"]::placeholder {
+            color: #888888 !important;
+        }
+    </style>
+    <script>
+        function toggleReviews(id) {
+            const el = document.getElementById(id);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+        // Trustpilot panel logic
+        let currentModalDomain = null;
+        async function openTrustpilotModal(domain) {
+            if (!domain) return;
+            currentModalDomain = domain;
+            
+            // Show overlay
+            const overlay = document.getElementById('background-overlay');
+            overlay.style.display = 'block';
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0', 'pointer-events-none');
+                overlay.classList.add('opacity-100', 'pointer-events-auto');
+            }, 10);
+            
+            // Show panel and push content
+            document.getElementById('trustpilot-panel').classList.remove('translate-x-full');
+            document.getElementById('main-content').classList.add('lg:-translate-x-64', '-translate-x-4');
+            document.body.style.overflow = 'hidden';
+            
+            document.getElementById('trustpilot-panel-content').innerHTML = '<div class="text-white text-center py-8">Loading Trustpilot reviews...</div>';
+            try {
+                const resp = await fetch(`/trustpilot-reviews?domain=${encodeURIComponent(domain)}`);
+                const data = await resp.json();
+                if (data.reviews && data.reviews.length > 0) {
+                    let html = '<h3 class="text-2xl font-bold mb-6 text-white">Trustpilot Reviews</h3>';
+                    html += '<div class="space-y-4">';
+                    data.reviews.forEach(r => {
+                        // Check if rating is less than 3 for red styling
+                        const rating = r.review_rating || 0;
+                        const isLowRating = rating < 3;
+                        const boxClass = isLowRating 
+                            ? 'result-box-red border-2' 
+                            : 'content-bg border border-gray-700';
+                        const starColor = isLowRating ? 'text-red-400' : 'text-yellow-400';
+                        
+                        html += `<div class='${boxClass} rounded-lg p-4 border'>` +
+                            `<div class='flex justify-between items-start mb-2'>` +
+                                `<span class='font-semibold text-white'>${r.author_title || 'Anonymous'}</span>` +
+                                `<span class='${starColor}'>★ ${rating}</span>` +
+                            `</div>` +
+                            `<div class='text-gray-400 text-xs mb-2'>${r.review_datetime_utc || ''}</div>` +
+                            `<p class='text-gray-200 leading-relaxed'>${r.review_text || ''}</p>` +
+                        `</div>`;
+                    });
+                    html += '</div>';
+                    document.getElementById('trustpilot-panel-content').innerHTML = html;
+                } else {
+                    document.getElementById('trustpilot-panel-content').innerHTML = '<div class="text-gray-300 text-center py-8">No Trustpilot reviews found.</div>';
+                }
+            } catch (e) {
+                document.getElementById('trustpilot-panel-content').innerHTML = '<div class="text-red-400 text-center py-8">Error loading Trustpilot reviews.</div>';
+            }
+        }
+        function closeTrustpilotModal() {
+            // Hide overlay
+            const overlay = document.getElementById('background-overlay');
+            overlay.classList.remove('opacity-100', 'pointer-events-auto');
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+            
+            // Hide panel and restore content position
+            document.getElementById('trustpilot-panel').classList.add('translate-x-full');
+            document.getElementById('main-content').classList.remove('lg:-translate-x-64', '-translate-x-4');
+            document.body.style.overflow = 'auto';
+            currentModalDomain = null;
+        }
+        
+        // AI Loading stages
+        const aiLoadingStages = [
+            {
+                title: "Initializing AI Analysis",
+                description: "Setting up reputation monitoring systems...",
+                duration: 1000
+            },
+            {
+                title: "Searching the Web",
+                description: "Scanning for mentions and reviews across the internet...",
+                duration: 2500
+            },
+            {
+                title: "Fetching Trustpilot Data",
+                description: "Collecting detailed review data from Trustpilot...",
+                duration: 2000
+            },
+            {
+                title: "AI Processing",
+                description: "Analyzing sentiment and reputation patterns...",
+                duration: 3000
+            },
+            {
+                title: "Generating Report",
+                description: "Compiling comprehensive reputation analysis...",
+                duration: 1500
+            }
+        ];
+
+        let currentAIStage = 0;
+        let aiStageTimeout;
+
+        function showAILoadingStage(stageIndex, panelContent) {
+            if (stageIndex >= aiLoadingStages.length) {
+                // All stages complete, proceed with actual API call
+                performActualAISearch();
+                return;
+            }
+
+            const stage = aiLoadingStages[stageIndex];
+            
+            const loadingHTML = `
+                <div class="text-center py-12">
+                    <div class="loading-spinner mx-auto mb-6"></div>
+                    <h3 class="text-2xl font-bold text-white mb-3 fade-in">${stage.title}</h3>
+                    <p class="text-gray-300 mb-8 fade-in">${stage.description}</p>
+                    
+                    <!-- AI Progress Bar -->
+                    <div class="progress-container mb-6">
+                        <div class="progress-bar" style="width: ${((stageIndex + 1) / aiLoadingStages.length) * 100}%"></div>
+                    </div>
+                    
+                    <!-- AI Stage Indicators -->
+                    <div class="stage-indicators">
+                        ${aiLoadingStages.map((_, index) => 
+                            `<div class="stage-dot ${index < stageIndex ? 'completed' : index === stageIndex ? 'active' : ''}" id="ai-dot-${index}"></div>`
+                        ).join('')}
+                    </div>
+                    
+                    <p class="text-sm text-gray-400 mt-6">Please wait while we analyze the business reputation...</p>
+                </div>
+            `;
+            
+            panelContent.innerHTML = loadingHTML;
+
+            // Move to next stage after duration
+            aiStageTimeout = setTimeout(() => {
+                currentAIStage++;
+                showAILoadingStage(currentAIStage, panelContent);
+            }, stage.duration);
+        }
+
+        async function performActualAISearch() {
+            try {
+                console.log('Starting actual AI search for domain:', currentModalDomain);
+                
+                const response = await fetch('/api/ai-search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        domain: currentModalDomain
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayAIAnalysis(data.analysis, data.search_count, data.trustpilot_count);
+                    // Load Trustpilot reviews into the analysis view
+                    loadTrustpilotReviewsInAnalysis();
+                } else {
+                    document.getElementById('trustpilot-panel-content').innerHTML = 
+                        `<div class="text-red-400 text-center py-8">
+                            <h3 class="text-xl font-bold mb-2">AI Analysis Failed</h3>
+                            <p>${data.error || 'Unknown error occurred'}</p>
+                        </div>`;
+                }
+                
+            } catch (error) {
+                console.error('AI Search error:', error);
+                document.getElementById('trustpilot-panel-content').innerHTML = 
+                    `<div class="text-red-400 text-center py-8">
+                        <h3 class="text-xl font-bold mb-2">Connection Error</h3>
+                        <p>Failed to connect to AI analysis service</p>
+                    </div>`;
+            }
+        }
+
+        async function runAISearch() {
+            if (!currentModalDomain) {
+                alert('No domain selected for AI search');
+                return;
+            }
+            
+            // Get panel content element
+            const panelContent = document.getElementById('trustpilot-panel-content');
+            
+            // Reset AI stage counter
+            currentAIStage = 0;
+            
+            // Start AI loading sequence
+            showAILoadingStage(currentAIStage, panelContent);
+        }
+        
+        function displayAIAnalysis(analysis, searchCount, trustpilotCount) {
+            const container = document.getElementById('trustpilot-panel-content');
+            
+            let html = `
+                <div class="space-y-6">
+                    <!-- Analysis Header -->
+                    <div class="${analysis.risk_bg} rounded-lg p-4 border">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-xl font-bold text-white">AI Reputation Analysis</h3>
+                            <span class="${analysis.risk_color} font-bold text-lg">${analysis.risk_level || 'Unknown'}</span>
+                        </div>
+                        <p class="text-gray-200">${analysis.business_name || 'Unknown Business'}</p>
+                        <div class="text-sm text-gray-400 mt-2">
+                            Sources: ${searchCount} web mentions • ${trustpilotCount} Trustpilot reviews
+                        </div>
+                    </div>
+                    
+                    <!-- Trustpilot Reviews Section -->
+                    <div class="content-bg rounded-lg p-4 border border-gray-700">
+                        <h4 class="text-lg font-semibold text-white mb-3">⭐ Trustpilot Reviews</h4>
+                        <div id="trustpilot-reviews-in-analysis" class="space-y-4">
+                            <p class="text-gray-400 text-center py-4">Loading Trustpilot reviews...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Executive Summary -->
+                    <div class="content-bg rounded-lg p-4 border border-gray-700">
+                        <h4 class="text-lg font-semibold text-white mb-3">📋 Executive Summary</h4>
+                        <p class="text-gray-200 leading-relaxed">${analysis.summary || 'No summary available'}</p>
+                    </div>
+            `;
+            
+            // Key Issues
+            if (analysis.key_issues && analysis.key_issues.length > 0) {
+                html += `
+                    <div class="content-bg rounded-lg p-4 border border-gray-700">
+                        <h4 class="text-lg font-semibold text-white mb-3">⚠️ Key Issues Identified</h4>
+                        <ul class="space-y-2">
+                `;
+                analysis.key_issues.forEach(issue => {
+                    html += `<li class="text-gray-200 flex items-start gap-2">
+                        <span class="text-red-400 mt-1">•</span>
+                        <span>${issue}</span>
+                    </li>`;
+                });
+                html += `</ul></div>`;
+            }
+            
+            // Recommendations
+            if (analysis.recommendations && analysis.recommendations.length > 0) {
+                html += `
+                    <div class="content-bg rounded-lg p-4 border border-gray-700">
+                        <h4 class="text-lg font-semibold text-white mb-3">💡 Recommendations</h4>
+                        <ul class="space-y-2">
+                `;
+                analysis.recommendations.forEach(rec => {
+                    html += `<li class="text-gray-200 flex items-start gap-2">
+                        <span class="text-blue-400 mt-1">•</span>
+                        <span>${rec}</span>
+                    </li>`;
+                });
+                html += `</ul></div>`;
+            }
+            
+            // Concerning Patterns
+            if (analysis.concerning_patterns && analysis.concerning_patterns.length > 0) {
+                html += `
+                    <div class="content-bg rounded-lg p-4 border border-gray-700">
+                        <h4 class="text-lg font-semibold text-white mb-3">🔍 Concerning Patterns</h4>
+                        <ul class="space-y-2">
+                `;
+                analysis.concerning_patterns.forEach(pattern => {
+                    html += `<li class="text-gray-200 flex items-start gap-2">
+                        <span class="text-orange-400 mt-1">•</span>
+                        <span>${pattern}</span>
+                    </li>`;
+                });
+                html += `</ul></div>`;
+            }
+            
+            // Positive Aspects
+            if (analysis.positive_aspects && analysis.positive_aspects.length > 0) {
+                html += `
+                    <div class="content-bg rounded-lg p-4 border border-gray-700">
+                        <h4 class="text-lg font-semibold text-white mb-3">✅ Positive Aspects</h4>
+                        <ul class="space-y-2">
+                `;
+                analysis.positive_aspects.forEach(positive => {
+                    html += `<li class="text-gray-200 flex items-start gap-2">
+                        <span class="text-green-400 mt-1">•</span>
+                        <span>${positive}</span>
+                    </li>`;
+                });
+                html += `</ul></div>`;
+            }
+            
+            // Web Search Results Preview  
+            if (analysis.search_results && analysis.search_results.length > 0) {
+                html += `
+                    <div class="content-bg rounded-lg p-4 border border-gray-700">
+                        <h4 class="text-lg font-semibold text-white mb-3">🔗 Web Mentions Found (${analysis.search_results.length})</h4>
+                        <div class="space-y-3 max-h-80 overflow-y-auto">
+                `;
+                analysis.search_results.forEach((result, index) => {
+                    html += `
+                        <div class="border-l-2 border-red-500 pl-3 py-2 content-bg rounded-r">
+                            <div class="flex justify-between items-start mb-1">
+                                <h5 class="text-sm font-medium text-white flex-1 pr-2">${result.title || 'No title'}</h5>
+                                <span class="text-xs text-gray-500">#${index + 1}</span>
+                            </div>
+                            <p class="text-xs text-gray-300 mb-2 leading-relaxed">${result.snippet || 'No snippet available'}</p>
+                            <div class="flex justify-between items-center">
+                                <a href="${result.link}" target="_blank" class="text-xs text-blue-400 hover:text-blue-300 underline">View Source →</a>
+                                <span class="text-xs text-gray-500">Query: "${result.search_query}"</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div></div>`;
+            } else {
+                // Debug: Show when no search results are found
+                html += `
+                    <div class="content-bg rounded-lg p-4 border border-gray-700">
+                        <h4 class="text-lg font-semibold text-white mb-3">🔗 Web Mentions</h4>
+                        <p class="text-gray-400 text-center py-4">No web mentions found or results not available</p>
+                        <p class="text-xs text-gray-500 text-center">Debug: search_results = ${JSON.stringify(analysis.search_results)}</p>
+                    </div>
+                `;
+            }
+            
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+        
+        async function loadTrustpilotReviewsInAnalysis() {
+            try {
+                const resp = await fetch(`/trustpilot-reviews?domain=${encodeURIComponent(currentModalDomain)}`);
+                const data = await resp.json();
+                const reviewsContainer = document.getElementById('trustpilot-reviews-in-analysis');
+                
+                if (data.reviews && data.reviews.length > 0) {
+                    let reviewsHtml = '';
+                    data.reviews.forEach(r => {
+                        // Check if rating is less than 3 for red styling
+                        const rating = r.review_rating || 0;
+                        const isLowRating = rating < 3;
+                        const boxClass = isLowRating 
+                            ? 'result-box-red border-2' 
+                            : 'content-bg border border-gray-600';
+                        const starColor = isLowRating ? 'text-red-400' : 'text-yellow-400';
+                        
+                        reviewsHtml += `<div class='${boxClass} rounded-lg p-4 border'>` +
+                            `<div class='flex justify-between items-start mb-2'>` +
+                                `<span class='font-semibold text-white'>${r.author_title || 'Anonymous'}</span>` +
+                                `<span class='${starColor}'>★ ${rating}</span>` +
+                            `</div>` +
+                            `<div class='text-gray-400 text-xs mb-2'>${r.review_datetime_utc || ''}</div>` +
+                            `<p class='text-gray-200 leading-relaxed'>${r.review_text || ''}</p>` +
+                        `</div>`;
+                    });
+                    reviewsContainer.innerHTML = reviewsHtml;
+                } else {
+                    reviewsContainer.innerHTML = '<p class="text-gray-400 text-center py-4">No Trustpilot reviews found.</p>';
+                }
+            } catch (e) {
+                document.getElementById('trustpilot-reviews-in-analysis').innerHTML = 
+                    '<p class="text-red-400 text-center py-4">Error loading Trustpilot reviews.</p>';
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-100 p-6">
-    <h2 class="text-2xl font-bold mb-4">Search Results</h2>
-    <a href="/" class="text-blue-600 underline mb-4 inline-block">← Back</a>
-    <div class="grid grid-cols-1 gap-6">
+<body class="min-h-screen relative overflow-x-hidden">
+    <!-- Blue Glow Effect -->
+    <div class="glow"></div>
+    
+    <!-- Background Overlay -->
+    <div id="background-overlay" class="fixed inset-0 overlay-bg z-40 opacity-0 pointer-events-none transition-all duration-300 ease-in-out"></div>
+    
+
+    
+    <!-- Trustpilot Right Panel -->
+    <div id="trustpilot-panel" class="fixed top-0 right-0 h-full w-full sm:w-5/6 lg:w-1/2 panel-bg shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="h-full flex flex-col">
+            <div class="p-6 border-b border-gray-700/50 panel-header">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-white">Review Details</h2>
+                    <button onclick="closeTrustpilotModal()" class="text-gray-400 hover:text-white text-2xl transition-colors">&times;</button>
+                </div>
+                <button onclick="runAISearch()" class="w-full btn-bg text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                    Run AI Search
+                </button>
+            </div>
+            <div class="flex-1 p-6 overflow-y-auto">
+                <div id="trustpilot-panel-content"></div>
+            </div>
+        </div>
+    </div>
+    <div id="main-content" class="main-content w-full max-w-4xl mx-auto pt-10 pb-6 px-4 transition-transform duration-300 ease-in-out">
+        <div class="text-center mb-8">
+            <h2 class="text-5xl md:text-6xl font-extrabold text-white mb-4 drop-shadow-lg bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                🔍 Search Results
+            </h2>
+            <p class="text-gray-300 text-lg mb-6">Discover businesses with detailed reputation analysis</p>
+            <a href="/" class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-semibold text-lg transition-all duration-300 bg-blue-500/10 px-6 py-3 rounded-full border border-blue-500/20 hover:bg-blue-500/20">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Search
+            </a>
+        </div>
+        <div class="w-full h-[70vh] overflow-y-auto flex flex-col gap-6 pr-2 pt-4 pb-4">
+            {% if results %}
         {% for result in results %}
-        <div class="bg-white p-6 rounded shadow">
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <h3 class="text-xl font-semibold">{{ result.name }}</h3>
-                    <p class="text-gray-700">{{ result.address }}</p>
-                    <p class="text-yellow-600">Rating: {{ result.rating }} ({{ result.reviews_count }} reviews)</p>
+                    {% set rating = result.rating or 0 %}
+                    {% set rating_float = rating|float %}
+                    {% if rating_float == 5.0 %}
+                        {% set box_color = 'result-box-green border' %}
+                    {% elif rating_float > 4.5 %}
+                        {% set box_color = 'result-box-orange border' %}
+                    {% else %}
+                        {% set box_color = 'result-box-red border' %}
+                    {% endif %}
+                <div class="{{ box_color }} business-card p-8 rounded-3xl shadow-2xl relative">
+                    <!-- Info Icon for Reviews with Tooltip (Bottom Right) -->
+                    <div class="absolute bottom-4 right-4 tooltip">
+                        <button onclick="openTrustpilotModal('{{ result.website }}')" 
+                                class="info-icon p-2 rounded-full transition-all duration-300">
+                            <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                        <span class="tooltiptext">Click to analyze</span>
+                    </div>
+            <div class="flex justify-between items-start mb-6">
+                <div class="flex-1">
+                            <h3 class="text-3xl font-bold text-white mb-3">
+                                {{ result.name }}
+                            </h3>
+                            <p class="text-gray-300 mb-3 text-lg">📍 {{ result.address }}</p>
+                            {% if result.website %}
+                                <a href="{{ result.website }}" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-300 underline break-all mb-4 inline-block text-sm bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">🌐 {{ result.website }}</a>
+                            {% endif %}
+                </div>
+                <div class="rating-badge text-right">
+                    <p class="text-2xl font-bold text-white mb-1">⭐ {{ rating }}</p>
+                    <p class="text-gray-400 text-sm">({{ result.reviews_count }} reviews)</p>
                 </div>
             </div>
-            
-            {% if result.reviews %}
-            <div class="mt-4">
-                <h4 class="font-semibold mb-2">Recent Reviews:</h4>
+                    {% if result.reviews and result.reviews|length > 0 %}
+                    <button onclick="toggleReviews('reviews-{{ loop.index0 }}')" class="show-reviews-btn focus:outline-none">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            Show Low Reviews
+                        </span>
+                    </button>
+                    <div id="reviews-{{ loop.index0 }}" class="hidden mt-6">
+                        <h4 class="font-semibold mb-4 text-white text-xl flex items-center gap-2">
+                            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                            Recent Reviews:
+                        </h4>
                 <div class="space-y-4">
                     {% for review in result.reviews %}
-                    <div class="border-t pt-3">
-                        <div class="flex justify-between items-start">
+                            <div class="content-bg border border-gray-700 rounded-xl p-4 hover:border-gray-600 transition-all duration-300">
+                        <div class="flex justify-between items-start mb-3">
                             <div>
-                                <p class="font-medium">{{ review.author }}</p>
-                                <p class="text-yellow-600">★ {{ review.rating }}/5</p>
+                                        <p class="font-medium text-white text-lg">👤 {{ review.author }}</p>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <p class="text-yellow-400 text-lg">★ {{ review.rating }}/5</p>
+                                            {% if review.rating|float < 3 %}
+                                                <span class="bg-red-500/20 text-red-400 px-2 py-1 rounded-full text-xs font-medium">Low Rating</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <span class="text-gray-400 text-sm bg-gray-700/50 px-3 py-1 rounded-full">📅 {{ review.date }}</span>
+                                </div>
+                                <p class="text-gray-300 leading-relaxed bg-gray-800/30 p-3 rounded-lg border-l-4 border-gray-600">{{ review.text }}</p>
                             </div>
-                            <span class="text-gray-500 text-sm">{{ review.date }}</span>
+                            {% endfor %}
                         </div>
-                        <p class="mt-2 text-gray-700">{{ review.text }}</p>
                     </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
-            </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-20">
+                    <div class="content-bg rounded-3xl p-12 border border-gray-700">
+                        <svg class="w-20 h-20 text-gray-500 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V20a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <h3 class="text-2xl font-bold text-white mb-4">No Results Found</h3>
+                        <p class="text-gray-400 text-lg mb-6">We couldn't find any businesses matching your search criteria.</p>
+                        <a href="/" class="inline-flex items-center gap-2 btn-bg text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            Try Another Search
+                        </a>
+                    </div>
+                </div>
             {% endif %}
         </div>
-        {% endfor %}
     </div>
+    <script>
+        // Initialize panel as hidden
+        document.getElementById('trustpilot-panel').classList.add('translate-x-full');
+        
+        // Close panel when clicking on overlay
+        document.getElementById('background-overlay').addEventListener('click', function() {
+            closeTrustpilotModal();
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const panel = document.getElementById('trustpilot-panel');
+            const mainContent = document.getElementById('main-content');
+            if (!panel.classList.contains('translate-x-full')) {
+                // Adjust content push based on screen size
+                mainContent.classList.remove('lg:-translate-x-64', '-translate-x-4');
+                if (window.innerWidth >= 1024) {
+                    mainContent.classList.add('lg:-translate-x-64');
+                } else {
+                    mainContent.classList.add('-translate-x-4');
+                }
+            }
+        });
+    </script>
 </body>
 </html> 
